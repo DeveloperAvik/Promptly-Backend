@@ -6,6 +6,8 @@ require("dotenv").config();
 const sanitizeInput = require('./middlewares/sanatizeInput'); 
 const userRouter = require('./routes/userRouter');
 const connectDB = require('./utils/connectDB');
+const { errorHandel } = require('./middlewares/errorMiddleware');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +17,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(sanitizeInput); 
+app.use(errorHandel)
 
 connectDB()
 
