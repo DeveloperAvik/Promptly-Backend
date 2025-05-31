@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
+            lowercase: true,
             match: [/.+@.+\..+/, "Please enter a valid email address"],
         },
         password: {
@@ -16,11 +17,16 @@ const userSchema = new mongoose.Schema(
             minlength: 8,
             select: false,
         },
-        trailActive: { type: Boolean, required: true },
-        trailExpire: Date,
+        trialActive: { type: Boolean, required: true },
+        trialExpire: Date,
+        trailPeriod : {
+            type:Number,
+            default: 7 // 7 days 
+        },
         subscription: {
             type: String,
-            enum: ["Trail", "Free", "Basic", "Premium"],
+            enum: ["Trial", "Free", "Basic", "Premium"],
+            default: "Trial"
         },
         apiRequestCount: { type: Number, default: 0 },
         monthlyRequestCount: { type: Number, default: 0 },
@@ -31,14 +37,23 @@ const userSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Hash password before saving
 userSchema.pre("save", async function (next) {
+    if (this.isModified("email")) {
+        this.email = this.email.toLowerCase();
+    }
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
-// Method to compare password
+userSchema.set("toJSON", {
+    transform: function (doc, ret) {
+        delete ret.password;
+        return ret;
+    }
+});
+
+
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
